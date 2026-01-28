@@ -1,0 +1,7 @@
+one
+two
+three
+should be visible in both
+four
+five
+six
