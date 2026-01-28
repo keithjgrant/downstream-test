@@ -24,19 +24,31 @@ This repository uses a branch-based strategy to maintain a public upstream fork 
 3. When syncing, we rebase `upstream-public` onto `main`, which replays new commits while keeping private files deleted
 4. The filtered branch is pushed to upstream repo
 
-## Initial Setup (Already Done)
+## Initial Setup
 
-```fish
-# Add upstream remote
-git remote add upstream ~/src/upstream-test
+### IMPORTANT: Two-Phase Approach
 
-# Create upstream-public branch
-git checkout -b upstream-public
-git rm private-asset.txt
-git commit -m "Remove private assets for upstream release"
+To ensure private files **never appear in upstream history**, use this two-phase approach:
 
-# Push to upstream
-git push upstream upstream-public:main
+1. **Phase 1: Clean Initialization** (one-time, rewrites history)
+2. **Phase 2: Ongoing Sync** (regular updates, preserves history)
+
+### Phase 1: Clean Initialization (One-Time Only)
+**Run the initialization script:**
+
+```bash
+./init-upstream-clean.sh
+```
+
+This script:
+- Uses `git-filter-repo` to rewrite history, removing private files from ALL commits
+- Creates a clean upstream history where private files never existed
+- Force-pushes to upstream
+- Sets up the `upstream-public` tracking branch
+
+**Why this matters:** Without clean initialization, private files remain visible in git history even if deleted in the latest commit. Anyone can access them via old commits.
+
+### Phase 2: Ongoing Sync
 ```
 
 ## Syncing Changes to Upstream
