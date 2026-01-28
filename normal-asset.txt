@@ -6,3 +6,4 @@ four
 five
 six
 New feature
+Another feature
