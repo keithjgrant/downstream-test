@@ -5,3 +5,4 @@ should be visible in both
 four
 five
 six
+New feature
