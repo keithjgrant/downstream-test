@@ -6,6 +6,7 @@ four
 five
 downstream work
 six
+upstream work
 New feature
 Another feature
 test content
