@@ -10,6 +10,7 @@
 PRIVATE_FILES=(
     "private-asset.txt"
     "POC-SUMMARY.md"
+    "integration/"
     # Add more private files here:
     # "integration-tests/"
     # "platform/assets/aap-logo.svg"
