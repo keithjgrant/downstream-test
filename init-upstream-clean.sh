@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# Initialize upstream with clean history (no private files ever existed)
-# This uses git-filter-repo to rewrite history ONCE during initial setup
+# Initialize upstream with clean history using orphan branch
+# This creates a new independent history without rewriting existing commits
+# After this, sync-to-upstream.sh will work normally
 
 set -e
 
@@ -18,11 +19,10 @@ PRIVATE_FILES=(
     "POC-SUMMARY.md"
 )
 
-echo -e "${YELLOW}==> Creating clean upstream history (one-time operation)...${NC}"
+echo -e "${YELLOW}==> Creating clean upstream history (orphan branch approach)...${NC}"
 echo ""
-echo -e "${RED}WARNING: This will rewrite git history!${NC}"
-echo "This script should only be run ONCE during initial setup."
-echo "After this, use sync-to-upstream.sh for ongoing syncs."
+echo -e "${YELLOW}Note: This creates a fresh start for upstream without rewriting main's history${NC}"
+echo "After this, sync-to-upstream.sh will work for ongoing syncs."
 echo ""
 read -p "Continue? (yes/no): " confirm
 
@@ -34,75 +34,54 @@ fi
 # Save current branch
 ORIGINAL_BRANCH=$(git branch --show-current)
 
-# Create a temporary working directory
-TEMP_DIR=$(mktemp -d)
-echo -e "${YELLOW}==> Creating temporary clone in $TEMP_DIR...${NC}"
+# Delete existing upstream-public if it exists
+echo -e "${YELLOW}==> Removing old upstream-public branch if exists...${NC}"
+git branch -D upstream-public 2>/dev/null || true
 
-# Clone current repo to temp directory
-git clone . "$TEMP_DIR"
-cd "$TEMP_DIR"
+# Create orphan branch (no history)
+echo -e "${YELLOW}==> Creating orphan branch...${NC}"
+git checkout --orphan upstream-public
 
-echo -e "${YELLOW}==> Removing private files from all history...${NC}"
-
-# Check if git-filter-repo is available
-if ! command -v git-filter-repo &> /dev/null; then
-    echo -e "${RED}✗ git-filter-repo is not installed.${NC}"
-    echo "Install it with: pip install git-filter-repo"
-    echo "Or: brew install git-filter-repo"
-    rm -rf "$TEMP_DIR"
-    exit 1
-fi
-
-# Build filter-repo arguments
-FILTER_ARGS=()
+# Remove private files from the working directory
+echo -e "${YELLOW}==> Removing private files...${NC}"
 for private_file in "${PRIVATE_FILES[@]}"; do
-    FILTER_ARGS+=("--path" "$private_file" "--invert-paths")
+    git rm --cached "$private_file" 2>/dev/null || true
+    rm -f "$private_file" 2>/dev/null || true
+    echo "  Removed: $private_file"
 done
 
-# Run filter-repo
-git-filter-repo "${FILTER_ARGS[@]}" --force
+# Commit the clean state
+echo -e "${YELLOW}==> Creating initial commit...${NC}"
+git commit -m "Initial upstream release (private files excluded)"
 
-echo -e "${YELLOW}==> Filtered history created${NC}"
-echo "Commits in filtered history:"
-git log --oneline | head -10
+echo -e "${GREEN}✓ Orphan branch created${NC}"
+echo ""
+echo "Current files in upstream-public:"
+ls -1
 
 echo ""
-read -p "Does this history look correct? Push to upstream? (yes/no): " push_confirm
+read -p "Does this look correct? Push to upstream? (yes/no): " push_confirm
 
 if [[ "$push_confirm" != "yes" ]]; then
-    echo "Aborted. Temporary directory preserved at: $TEMP_DIR"
-    echo "You can inspect it and manually push if desired."
+    echo "Aborted. Branch 'upstream-public' created locally but not pushed."
+    echo "You can push manually with: git push upstream upstream-public:main --force"
+    git checkout "$ORIGINAL_BRANCH"
     exit 1
 fi
 
-# Add upstream remote
-echo -e "${YELLOW}==> Configuring upstream remote...${NC}"
-git remote add upstream git@github.com:keithjgrant/upstream-test.git
-
-# Force push to upstream
-echo -e "${YELLOW}==> Force pushing clean history to upstream...${NC}"
-git push upstream main:main --force
+# Push to upstream (force required for initial push)
+echo -e "${YELLOW}==> Force pushing to upstream...${NC}"
+git push upstream upstream-public:main --force
 
 echo -e "${GREEN}✓ Clean upstream history created and pushed!${NC}"
 echo ""
-echo -e "${YELLOW}==> Updating local upstream-public branch...${NC}"
-
-# Go back to original repo
-cd -
-
-# Delete and recreate upstream-public branch to match the filtered history
-git branch -D upstream-public 2>/dev/null || true
-git fetch upstream
-git checkout -b upstream-public upstream/main
-
-echo -e "${GREEN}==> Complete!${NC}"
+echo -e "${YELLOW}Important: This creates a completely new history in upstream.${NC}"
+echo "From now on, use sync-to-upstream.sh to sync new commits."
 echo ""
-echo "Next steps:"
-echo "  1. Verify upstream repo has clean history (no private files)"
-echo "  2. Use sync-to-upstream.sh for all future syncs"
-echo ""
-echo "Cleaning up temporary directory..."
-rm -rf "$TEMP_DIR"
+echo "How it works going forward:"
+echo "  1. Make commits on 'main' (with private files)"
+echo "  2. Run './sync-to-upstream.sh' to sync"
+echo "  3. Script rebases upstream-public onto main, auto-removing private files"
 
 # Return to original branch
 git checkout "$ORIGINAL_BRANCH"
