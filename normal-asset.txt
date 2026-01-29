@@ -4,6 +4,7 @@ three
 should be visible in both
 four
 five
+downstream work
 six
 New feature
 Another feature
