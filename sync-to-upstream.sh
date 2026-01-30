@@ -40,13 +40,14 @@ git fetch upstream
 
 # Check if upstream has new commits that aren't in downstream main yet
 # (e.g., from merged PRs that need to be integrated)
-UPSTREAM_NEW_COMMITS=$(git rev-list --count main..upstream/main 2>/dev/null || echo "0")
+# Use cherry to check by content, not SHA (handles cherry-picks)
+UPSTREAM_NEW_COMMITS=$(git log main..upstream/main --oneline --cherry-pick --right-only 2>/dev/null | wc -l | tr -d ' ')
 
 if [[ "$UPSTREAM_NEW_COMMITS" -gt 0 ]]; then
     echo -e "${YELLOW}⚠ Upstream has $UPSTREAM_NEW_COMMITS new commit(s) not in downstream main.${NC}"
     echo ""
     echo "These commits need to be integrated into downstream main first:"
-    git log main..upstream/main --oneline
+    git log main..upstream/main --oneline --cherry-pick --right-only
     echo ""
     echo -e "${YELLOW}Recommended workflow:${NC}"
     echo "  1. Create a branch: git checkout -b sync-from-upstream"
