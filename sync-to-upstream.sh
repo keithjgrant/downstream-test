@@ -56,14 +56,8 @@ if [[ "$UPSTREAM_NEW_COMMITS" -gt 0 ]]; then
     echo "  4. Run CI tests (including downstream integration tests)"
     echo "  5. After PR merges, run this script again"
     echo ""
-    read -p "Continue anyway and force-push? (yes/no): " force_confirm
-    
-    if [[ "$force_confirm" != "yes" ]]; then
-        echo "Aborting. Please sync upstream changes to main first."
-        exit 1
-    fi
-    
-    echo -e "${RED}⚠ WARNING: Force-pushing will overwrite upstream commits!${NC}"
+    echo "Aborting. Please sync upstream changes to main first."
+    exit 1
 fi
 
 echo -e "${YELLOW}==> Checking out upstream-public branch...${NC}"
