@@ -5,6 +5,7 @@ should be visible in both
 four
 five
 downstream work
+more downstream changes
 six
 upstream work
 New feature
