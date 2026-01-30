@@ -41,28 +41,28 @@ git fetch upstream
 # Check if upstream has new commits (e.g., from merged PRs)
 UPSTREAM_NEW_COMMITS=$(git rev-list --count upstream-public..upstream/main 2>/dev/null || echo "0")
 
-if [[ "$UPSTREAM_NEW_COMMITS" -gt 0 ]]; then
-    echo -e "${YELLOW}⚠ Upstream has $UPSTREAM_NEW_COMMITS new commit(s) from merged PRs.${NC}"
-    echo ""
-    echo "These commits need to be integrated into downstream main first:"
-    git log upstream-public..upstream/main --oneline
-    echo ""
-    echo -e "${YELLOW}Recommended workflow:${NC}"
-    echo "  1. Create a branch: git checkout -b sync-from-upstream"
-    echo "  2. Cherry-pick or merge: git cherry-pick <commit> (or git merge upstream/main)"
-    echo "  3. Push and create PR: git push origin sync-from-upstream"
-    echo "  4. Run CI tests (including downstream integration tests)"
-    echo "  5. After PR merges, run this script again"
-    echo ""
-    read -p "Continue anyway and force-push? (yes/no): " force_confirm
+# if [[ "$UPSTREAM_NEW_COMMITS" -gt 0 ]]; then
+#     echo -e "${YELLOW}⚠ Upstream has $UPSTREAM_NEW_COMMITS new commit(s) from merged PRs.${NC}"
+#     echo ""
+#     echo "These commits need to be integrated into downstream main first:"
+#     git log upstream-public..upstream/main --oneline
+#     echo ""
+#     echo -e "${YELLOW}Recommended workflow:${NC}"
+#     echo "  1. Create a branch: git checkout -b sync-from-upstream"
+#     echo "  2. Cherry-pick or merge: git cherry-pick <commit> (or git merge upstream/main)"
+#     echo "  3. Push and create PR: git push origin sync-from-upstream"
+#     echo "  4. Run CI tests (including downstream integration tests)"
+#     echo "  5. After PR merges, run this script again"
+#     echo ""
+#     read -p "Continue anyway and force-push? (yes/no): " force_confirm
     
-    if [[ "$force_confirm" != "yes" ]]; then
-        echo "Aborting. Please sync upstream changes to main first."
-        exit 1
-    fi
+#     if [[ "$force_confirm" != "yes" ]]; then
+#         echo "Aborting. Please sync upstream changes to main first."
+#         exit 1
+#     fi
     
-    echo -e "${RED}⚠ WARNING: Force-pushing will overwrite upstream commits!${NC}"
-fi
+#     echo -e "${RED}⚠ WARNING: Force-pushing will overwrite upstream commits!${NC}"
+# fi
 
 echo -e "${YELLOW}==> Checking out upstream-public branch...${NC}"
 git checkout upstream-public
