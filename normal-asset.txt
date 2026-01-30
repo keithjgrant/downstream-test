@@ -8,6 +8,7 @@ downstream work
 more downstream changes
 six
 upstream work
+more upstream work
 New feature
 Another feature
 test content
